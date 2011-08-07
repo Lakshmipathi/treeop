@@ -151,51 +151,66 @@ char junk='g';
 	}
 	
 }
-
-void printarray(int path[],int len){
-int i=0;
-char str_path[25];
-	//First move to working directory.
-	chdir(wcd);
-	for (i=0;i<len;i++)
-	{
-	printf("%d->",path[i]);
-	sprintf(str_path,"dir_L%d_%d",i,path[i]);
-	mkdir(str_path,0777);
-	chdir(str_path);
-	//create N number of files under the directory with Size S.
-	creat_files(i);
-	}
-
-	//okay.Now get back to top-level
-	for (i=0;i<len;i++)
-	chdir("..");
-	
-	printf("NULL\n");
-	
-}
-
-void printpathsRecur(struct node* node,int path[],int pathlen){
-	if(node==NULL)
+void create_dirs(struct node* node,int level){
+	char str_path[25];
+	if(node==NULL){
+	if(chdir("..")<0)
+	handle_error("\n Chdir() failed");
 	return;
+	}else{
+	//first set dirname , create and move into it
+	sprintf(str_path,"dir_L%d_%d",level,node->data);
+	mkdir(str_path,0777);
 
-	//append this node to path arrary
-	path[pathlen++]=node->data;
+	if(chdir(str_path)<0)
+	handle_error("\n cHdir() failed");
+
+	create_dirs(node->left,++level);
+
+	//first set dirname , create and move into right 
+	level--;
+	sprintf(str_path,"dir_L%d_%d",level,node->data);
+	mkdir(str_path,0777);
+	if(chdir(str_path)<0)
+	handle_error("\n chDir() failed");
 	
-	//if its a left node,then print path that led to here
-	if(node->left==NULL && node->right==NULL)
-	printarray(path,pathlen);
-	else{
-	printpathsRecur(node->left,path,pathlen);
-	printpathsRecur(node->right,path,pathlen);
+	create_dirs(node->right,++level);
+
+	//get back from inter-mediate nodes
+	if(chdir("..")<0)
+	handle_error("\n chdIr() failed");
 	}
 }
 
-void printpaths(struct node* node){
-	int path[1000];
-	printpathsRecur(node,path,0);
+void create_files(struct node* node,int level){
+	char str_path[25];
+	if(node==NULL){
+	if(chdir("..")<0)
+	handle_error("\n Chdir() failed");
+	return;
+	}else{
+	//first  move into it
+	sprintf(str_path,"dir_L%d_%d",level,node->data);
+	if(chdir(str_path)<0)
+	handle_error("\n cHdir() failed");
+	creat_files(level);
 
-};
+	create_files(node->left,++level);
+
+	// move into right 
+	level--;
+	sprintf(str_path,"dir_L%d_%d",level,node->data);
+	if(chdir(str_path)<0)
+	handle_error("\n chDir() failed");
+	
+	creat_files(level);
+	create_files(node->right,++level);
+
+	//get back from inter-mediate nodes
+	if(chdir("..")<0)
+	handle_error("\n chdIr() failed");
+	}
+}
 
 /* void organize_input(int item[],int size){
 int n=0;
@@ -210,11 +225,8 @@ int n=0;
 
 struct node* buildtree(struct node* root,int size){
 int n=size;
-//int items[size];
-
 
 	while(n--)
-	//items[n++]=rand()%(size*4);
  	root=insert(root,rand()%(size*5));
 
 return root;
@@ -223,7 +235,7 @@ return root;
 const char *argp_program_version = "treeop - alpha (06-Aug-2011) ";
 const char *argp_program_bug_address = "lakshmipathi.g@gmail.com";
 
-static char args_doc[] = "WDIR - working directory";
+static char args_doc[] = "<WDIR> ";
 static char doc[] = "treeop - A File System Testing tool.";
 
 /* parse arg list */
@@ -294,6 +306,8 @@ int main(int argc,char* argv[]){
 	files_count=atoi(arguments.string2);
 	size_count=atoi(arguments.string3);
 	strcpy(wcd,arguments.args[0]);
+	if(wcd[0]!='/')
+	handle_error("\nPlease provide absolute name with target dir");
 
 	//buildtree
 	root=buildtree(root,totalnodes);
@@ -302,8 +316,14 @@ int main(int argc,char* argv[]){
 	printf("\nMinvalue of Tree:%d",findmin(root));
 	printf("\nMaxvalue of Tree:%d\n",findmax(root));
 
-	//printpaths 
-	printpaths(root);
+	if(chdir(wcd)<0)
+	handle_error("\n treeop: Can't cd into target directory.I got the message");
+	create_dirs(root,0);
+
+	if(chdir(wcd)<0)
+	handle_error("\n treeop: Can't cd into target directory.I got the message");
+	create_files(root,0);
+
 	//delete item
 	printf("\n Delete data from Tree:");
 	if(delete(root,(findmax(root)))!=NULL)
