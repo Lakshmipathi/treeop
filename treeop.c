@@ -140,8 +140,7 @@ char junk='g';
 
 	fp=creat(fname,0777);
 	if(fp<0){
-		perror("File Creation Failed");
-		exit(0);
+		handle_error("\ntreeop : file creation failed");
 		}
 	while(s-- >0){
 	memset(buf,junk,1024);
@@ -155,7 +154,7 @@ void create_dirs(struct node* node,int level){
 	char str_path[25];
 	if(node==NULL){
 	if(chdir("..")<0)
-	handle_error("\n Chdir() failed");
+	handle_error("\n treeop:chdir() failed");
 	return;
 	}else{
 	//first set dirname , create and move into it
@@ -163,7 +162,7 @@ void create_dirs(struct node* node,int level){
 	mkdir(str_path,0777);
 
 	if(chdir(str_path)<0)
-	handle_error("\n cHdir() failed");
+	handle_error("\n treeop:chdir() failed");
 
 	create_dirs(node->left,++level);
 
@@ -172,13 +171,13 @@ void create_dirs(struct node* node,int level){
 	sprintf(str_path,"dir_L%d_%d",level,node->data);
 	mkdir(str_path,0777);
 	if(chdir(str_path)<0)
-	handle_error("\n chDir() failed");
+	handle_error("\n treeop:chdir() failed");
 	
 	create_dirs(node->right,++level);
 
 	//get back from inter-mediate nodes
 	if(chdir("..")<0)
-	handle_error("\n chdIr() failed");
+	handle_error("\n treeop:chdir() failed");
 	}
 }
 
@@ -186,13 +185,13 @@ void create_files(struct node* node,int level){
 	char str_path[25];
 	if(node==NULL){
 	if(chdir("..")<0)
-	handle_error("\n Chdir() failed");
+	handle_error("\n treeop:chdir() failed");
 	return;
 	}else{
 	//first  move into it
 	sprintf(str_path,"dir_L%d_%d",level,node->data);
 	if(chdir(str_path)<0)
-	handle_error("\n cHdir() failed");
+	handle_error("\n treeop:chdir() failed");
 	creat_files(level);
 
 	create_files(node->left,++level);
@@ -201,14 +200,14 @@ void create_files(struct node* node,int level){
 	level--;
 	sprintf(str_path,"dir_L%d_%d",level,node->data);
 	if(chdir(str_path)<0)
-	handle_error("\n chDir() failed");
+	handle_error("\n treeop:chdir() failed");
 	
 	creat_files(level);
 	create_files(node->right,++level);
 
 	//get back from inter-mediate nodes
 	if(chdir("..")<0)
-	handle_error("\n chdIr() failed");
+	handle_error("\n treeop:chdir() failed");
 	}
 }
 
@@ -307,7 +306,7 @@ int main(int argc,char* argv[]){
 	size_count=atoi(arguments.string3);
 	strcpy(wcd,arguments.args[0]);
 	if(wcd[0]!='/')
-	handle_error("\nPlease provide absolute name with target dir");
+	handle_error("\ntreeop: Please provide absolute name with target dir");
 
 	//buildtree
 	root=buildtree(root,totalnodes);
