@@ -38,15 +38,12 @@ struct node* makeempty(struct node* root){
 //find for bst.
 
 struct node* find(int x ,struct node* root){
-	if(root == NULL)
-		return NULL;
-	
+	while( root !=NULL && x !=root->data)
 	if(x < root->data)
-		return find(x,root->left);
-	else if (x > root->data)
-		return find(x,root->right);
-	else
-		return root;
+		root=root->left;
+	else 
+		root=root->right;
+return root;
 }
 
 //findmin
